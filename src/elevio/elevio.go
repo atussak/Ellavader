@@ -30,8 +30,8 @@ const (
 	BT_Cab                 = 2
 )
 
-type ButtonEvent struct {
-	Floor  int
+type Order struct{
+	Floor int
 	Button ButtonType
 }
 
