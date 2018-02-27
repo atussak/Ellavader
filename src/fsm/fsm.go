@@ -1,8 +1,8 @@
 package fsm
 
 import(
-	"./elevio"
-	"fmt"
+	"../elevio"
+	//"fmt"
 )
 
 

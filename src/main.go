@@ -41,6 +41,7 @@ func main(){
     go elevio.PollFloorSensor(drv_floors)
     
     
+
     for {
         select {
         case a := <- drv_buttons:
@@ -57,5 +58,5 @@ func main(){
             elevio.SetMotorDirection(d)
             
         }
-    }    
+    }    */
 }
