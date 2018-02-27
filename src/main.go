@@ -1,10 +1,32 @@
 package main
 
-import "./elevio"
-import "fmt"
+import (
+    "./elevio"
+    "./fsm"
+    //"./orderManager"
+    // "fmt"
+)
+
 
 func main(){
 
+
+    ch := fsm.Channels {
+        New_order_ch:       make(chan elevio.Order),
+        Direction_ch:       make(chan int),
+        Floor_reached_ch:   make(chan int),
+
+        Start_timer_ch:     make(chan bool),
+        Timeout_ch:         make(chan bool),
+    }
+
+    fsm.FSM_init(0)
+
+    go elevio.PollButtons(ch.New_order_ch)
+    go elevio.PollFloorSensor(ch.Floor_reached_ch)
+
+
+    /*
     numFloors := 4
 
     elevio.Init("localhost:15657", numFloors)
