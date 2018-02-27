@@ -9,7 +9,7 @@ import(
 const (
 	IDLE = 0
 	MOVING = 1
-	IN_FLOOR = 2
+	DOOR_OPEN = 2
 )
 
 
@@ -25,6 +25,7 @@ type Channels struct{
 
 
 var current_state int
+var requests [4] bool
 
 
 func FSM(channels Channels){
@@ -52,37 +53,52 @@ func eventNewOrder(){
 	switch current_state:
 
 	case IDLE:
+		// if etasje = bestillt etasje
+			// slett ordre
+			// start timer for åpen dør
+			// åpne dør
+		current_state = DOOR_OPEN
+		// else
 		current_state = MOVING
+		// sett riktig kjøreretning
 
 	case MOVING:
+		// Do nothing
 
-	case IN_FLOOR:
+	case DOOR_OPEN:
+		// if etasje = bestillt etasje
+			// slett ordre
+			// start timer for åpen dør
+		current_state = IDLE
+
 
 }
 
 
 func eventInFloor(){
+	// current state is MOVING
+
 	// start timer
 
 	// skru av lys
 
-	// sjekke/oppdatere kø
-
-	// sett state (kjør forbi eller stopp)
+	// sjekke kø
 
 	// åpne dør hvis bestilling
+	// (sett på timer og lys)
 
-	//
+	// bytt state til DOOR_OPEN
 
 }
 
 
 func eventTimeout(){
+	// skru av door light
+
+	// oppdatere kø
+
 	// sett state til idle hvis kø er tom
 
 	// sett state til moving hvis kø ikke er tom
 
-	// skru av door open
-
-	//
 }
