@@ -14,91 +14,143 @@ const (
 
 
 type Channels struct{
-	new_order_ch chan bool
-	direction_ch chan int
-	in_floor_ch chan int
+	New_order_ch chan elevio.Order
+	Direction_ch chan int
+	Floor_reached_ch chan int
 
-	start_timer_ch chan bool
-	timeout_ch chan bool
-
+	Start_timer_ch chan bool
+	Timeout_ch chan bool
 }
 
 
-var current_state int
+var state int
+var direction elevio.MotorDirection
 var requests [4] bool
+var floor int
 
 
-func FSM(channels Channels){
+func FSM_init(current_floor int){
+	floor = current_floor
+	state = IDLE
+	requests = [4]bool{false, false, false, false}
+}
+
+
+func FSM_run(ch Channels){
 	for{
-		select{
-		case <- channels.new_order_ch:
-			eventNewOrder()
-		case <- channels.in_floor_ch:
-			eventInFloor()
-		case <- channels.timeout_ch:
+		select {
+		// Go routine in main polling buttons	
+		case new_order := <- ch.New_order_ch:
+			eventNewOrder(new_order, ch)
+		case floor = <- ch.Floor_reached_ch:
+			eventFloorReached(ch)
+		case <- ch.Timeout_ch:
 			eventTimeout()
 		}
 	}
 }
 
 
-func eventNewOrder(){
+func eventNewOrder(new_order elevio.Order, ch Channels){
 
-	// finn ut hvilken ordre
+	// add new order to queue
+	requests[new_order.Floor] = true
 
-	// legg i requests
+	// turn on lamp for button pressed
+	elevio.SetButtonLamp(new_order.Button, new_order.Floor, true)
 
-	// sett på lys
-
-	switch current_state:
+	switch state {
 
 	case IDLE:
-		// if etasje = bestillt etasje
-			// slett ordre
-			// start timer for åpen dør
-			// åpne dør
-		current_state = DOOR_OPEN
-		// else
-		current_state = MOVING
-		// sett riktig kjøreretning
+		if floor == new_order.Floor {
+			ch.Start_timer_ch <- true
+			state = DOOR_OPEN
+		} else {
+			if new_order.Floor < floor {
+				elevio.SetMotorDirection(elevio.MD_Down)
+			} else {
+				elevio.SetMotorDirection(elevio.MD_Up)
+			}
+			
+			state = MOVING
+		}
 
 	case MOVING:
 		// Do nothing
 
 	case DOOR_OPEN:
-		// if etasje = bestillt etasje
-			// slett ordre
-			// start timer for åpen dør
-		current_state = IDLE
-
-
+		if floor == new_order.Floor {
+			ch.Start_timer_ch <- true
+		}
+	}
 }
 
 
-func eventInFloor(){
+func eventFloorReached(ch Channels){
 	// current state is MOVING
 
-	// start timer
+	elevio.SetFloorIndicator(floor)
 
-	// skru av lys
+	if requests[floor] {
+		elevio.SetMotorDirection(elevio.MD_Stop)
+		elevio.SetDoorOpenLamp(true)
+		ch.Start_timer_ch <- true
+		state = DOOR_OPEN
+	}
+}
 
-	// sjekke kø
 
-	// åpne dør hvis bestilling
-	// (sett på timer og lys)
+func OM_isQueueEmpty() bool {
+	for i := 0; i < 4; i++ {
+		if requests[i] {
+			return true
+		}
+	}
+	return false
+}
 
-	// bytt state til DOOR_OPEN
+func OM_chooseDirection() elevio.MotorDirection {
+
+	var dir elevio.MotorDirection = elevio.MD_Stop 
+
+	if OM_isQueueEmpty() {
+		return dir
+	}
+
+	if direction == elevio.MD_Down {
+		for i:= floor-1; i >= 0; i-- {
+			if requests[i] {
+				dir = elevio.MD_Down
+			}
+		}
+	} else if direction == elevio.MD_Up {
+		for i:= floor+1; i < 4; i++ {
+			if requests[i] {
+				dir =  elevio.MD_Up
+			}
+		}
+	} else if dir == elevio.MD_Stop {
+		dir = -1*direction
+	}
+
+	return dir
+	
 
 }
 
 
 func eventTimeout(){
-	// skru av door light
 
-	// oppdatere kø
+	elevio.SetDoorOpenLamp(false)
 
-	// sett state til idle hvis kø er tom
+	requests[floor] = false
 
-	// sett state til moving hvis kø ikke er tom
+	direction = OM_chooseDirection()
 
+	if OM_isQueueEmpty() {
+		state = IDLE
+	} else {
+		direction = OM_chooseDirection()
+		state = MOVING
+	}
 }
