@@ -1,0 +1,13 @@
+
+//Run SimElevatorServer from Simulator-v2:
+
+"cd Simulator-v2"
+"./SimElevatorServer"
+
+//Run ElevatorServer from HOME:
+
+"ElevatorServer"
+
+//Run code. NB! The tcp connection should connect to same port as the one found in simulator.con
+
+
