@@ -53,6 +53,11 @@ func Init(addr string, numFloors int) {
 		panic(err.Error())
 	}
 	_initialized = true
+
+	for getFloor() != 0{
+		SetMotorDirection(MD_Down)
+	}
+	SetMotorDirection(MD_Stop)
 }
 
 
