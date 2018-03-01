@@ -2,7 +2,8 @@ package fsm
 
 import(
 	"../elevio"
-	//"fmt"
+	"time"
+	"fmt"
 )
 
 
@@ -29,15 +30,17 @@ var requests [4] bool
 var floor int
 
 
-func FSM_init(current_floor int){
+func Init(current_floor int){
 	floor = current_floor
 	state = IDLE
 	requests = [4]bool{false, false, false, false}
 }
 
 
-func FSM_run(ch Channels){
+func Run(ch Channels){
+	fmt.Printf("fsm")
 	for{
+
 		select {
 		// Go routine in main polling buttons	
 		case new_order := <- ch.New_order_ch:
@@ -49,6 +52,64 @@ func FSM_run(ch Channels){
 		}
 	}
 }
+
+
+func DoorTimer( Start_timer_ch chan bool, Timeout_ch chan bool) {
+	fmt.Printf("timer")
+	const door_open_dur = 3 * time.Second
+	timer := time.NewTimer(0)
+	timer.Stop()
+
+	for {
+		select {
+		case <-Start_timer_ch:
+			timer.Reset(door_open_dur)
+		case <-timer.C:
+			timer.Stop()
+			Timeout_ch <- true
+		}
+	}
+}
+
+func OM_isQueueEmpty() bool {
+	for i := 0; i < 4; i++ {
+		if requests[i] {
+			return true
+		}
+	}
+	return false
+}
+
+func OM_chooseDirection() elevio.MotorDirection {
+
+	var dir elevio.MotorDirection = elevio.MD_Stop 
+
+	if OM_isQueueEmpty() {
+		return dir
+	}
+
+	if direction == elevio.MD_Down {
+		for i:= floor-1; i >= 0; i-- {
+			if requests[i] {
+				dir = elevio.MD_Down
+			}
+		}
+	} else if direction == elevio.MD_Up {
+		for i:= floor+1; i < 4; i++ {
+			if requests[i] {
+				dir =  elevio.MD_Up
+			}
+		}
+	} else if dir == elevio.MD_Stop {
+		dir = -1*direction
+	}
+
+	return dir
+	
+
+}
+
+
 
 
 func eventNewOrder(new_order elevio.Order, ch Channels){
@@ -100,48 +161,11 @@ func eventFloorReached(ch Channels){
 }
 
 
-func OM_isQueueEmpty() bool {
-	for i := 0; i < 4; i++ {
-		if requests[i] {
-			return true
-		}
-	}
-	return false
-}
-
-func OM_chooseDirection() elevio.MotorDirection {
-
-	var dir elevio.MotorDirection = elevio.MD_Stop 
-
-	if OM_isQueueEmpty() {
-		return dir
-	}
-
-	if direction == elevio.MD_Down {
-		for i:= floor-1; i >= 0; i-- {
-			if requests[i] {
-				dir = elevio.MD_Down
-			}
-		}
-	} else if direction == elevio.MD_Up {
-		for i:= floor+1; i < 4; i++ {
-			if requests[i] {
-				dir =  elevio.MD_Up
-			}
-		}
-	} else if dir == elevio.MD_Stop {
-		dir = -1*direction
-	}
-
-	return dir
-	
-
-}
-
 
 func eventTimeout(){
 
 	elevio.SetDoorOpenLamp(false)
+	//
 
 	requests[floor] = false
 
