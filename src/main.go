@@ -4,12 +4,15 @@ import (
     "./elevio"
     "./fsm"
     //"./orderManager"
-    // "fmt"
+    //"fmt"
 )
 
 
 func main(){
-
+	
+	numFloors := 4
+	elevio.Init("localhost:15658", numFloors)
+	
 
     ch := fsm.Channels {
         New_order_ch:       make(chan elevio.Order),
@@ -20,35 +23,42 @@ func main(){
         Timeout_ch:         make(chan bool),
     }
 
-    fsm.FSM_init(0)
+    
 
     go elevio.PollButtons(ch.New_order_ch)
     go elevio.PollFloorSensor(ch.Floor_reached_ch)
 
+    current_floor := <-ch.Floor_reached_ch
 
+    fsm.Init(current_floor)
+
+    go fsm.DoorTimer(ch.Start_timer_ch, ch.Timeout_ch)
+    go fsm.Run(ch)
+
+
+    for{
+    	
+    }
+    
     /*
-    numFloors := 4
-
-    elevio.Init("localhost:15657", numFloors)
-    
     var d elevio.MotorDirection = elevio.MD_Up
-    //elevio.SetMotorDirection(d)
+    elevio.SetMotorDirection(d)
     
-    drv_buttons := make(chan elevio.ButtonEvent)
-    drv_floors  := make(chan int)  
+    //drv_buttons := make(chan elevio.Order)
+    //drv_floors  := make(chan int)  
     
-    go elevio.PollButtons(drv_buttons)
-    go elevio.PollFloorSensor(drv_floors)
+    //go elevio.PollButtons(drv_buttons)
+    //go elevio.PollFloorSensor(drv_floors)
     
     
 
     for {
         select {
-        case a := <- drv_buttons:
+        case a := <- ch.New_order_ch:
             fmt.Printf("%+v\n", a)
             elevio.SetButtonLamp(a.Button, a.Floor, true)
             
-        case a := <- drv_floors:
+        case a := <- ch.Floor_reached_ch:
             fmt.Printf("%+v\n", a)
             if a == numFloors-1 {
                 d = elevio.MD_Down
