@@ -11,33 +11,47 @@ type Order struct{
 	Floor int
 }
 
-func isQueueEmpty(requests []bool) bool {
-	for i := 0; i < def.NUM_FLOORS; i++ {
-		if requests[i] {
-			return false
+func isQueueEmpty(requests [][]bool) bool {
+	for floor := 0; floor < def.NUM_FLOORS; floor++ {
+		for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
+			if requests[floor][button] {
+				return false
+			}
 		}
 	}
 	return true
 }
 
-
-func isOrdersAbove(requests []bool, current_floor int) bool {
-	for i:= floor-1; i >= 0; i-- {
-		if requests[i] {
-			dir = elevio.MD_Down
+func isOrderInFloor(requests [][]bool, floor int) {
+	for button := 0; button <= def.NUM_BUTTON_TYPES; button++ {
+		if requests[floor][button] {
+			return true
 		}
 	}
+	return false
 }
 
-func isOrdersBelow(requests []bool, current_floor int) bool {
-	for i:= floor-1; i >= 0; i-- {
-		if requests[i] {
-			dir = elevio.MD_Down
+func isOrdersAbove(requests [][]bool, current_floor int) bool {
+	for floor:= current_floor+1; floor < def.NUM_FLOORS; floor++ {
+		if isOrderInFloor(requests, floor) {
+			return true
 		}
 	}
+	return false
 }
 
-func ChooseDirection(requests []bool, current_floor int, current_direction elevio.Motor) {
+func isOrdersBelow(requests [][]bool, current_floor int) bool {
+	for floor:= current_floor-1; floor >= 0; floor-- {
+		if isOrderInFloor(requests, floor) {
+			return true
+		}
+	}
+	return false
+}
+
+
+
+func ChooseDirection(requests [][]bool, current_floor int, current_direction elevio.Motor) {
 
 	if isQueueEmpty(requests) { return elevio.MD_Stop }
 
