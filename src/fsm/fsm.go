@@ -132,7 +132,7 @@ func OM_chooseDirection() elevio.MotorDirection {
 func eventNewOrder(new_order elevio.Order, ch Channels){
 
 	// add new order to queue
-	requests[new_order.Floor] = true
+	requests[new_order.Floor][new_order.Button] = true
 
 	// turn on lamp for button pressed
 	elevio.SetButtonLamp(new_order.Button, new_order.Floor, true)
