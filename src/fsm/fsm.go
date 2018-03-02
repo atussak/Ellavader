@@ -4,6 +4,7 @@ import(
 	"../elevio"
 	"time"
 	"fmt"
+	def "../definitions"
 )
 
 
@@ -26,8 +27,8 @@ type Channels struct{
 
 var state int
 var direction elevio.MotorDirection
-var requests [4] bool
 var floor int
+var requests [def.NUM_FLOORS] bool
 
 
 func Init(current_floor int){
@@ -38,16 +39,18 @@ func Init(current_floor int){
 
 
 func Run(ch Channels){
-	fmt.Printf("fsm")
 	for{
 
 		select {
 		// Go routine in main polling buttons	
 		case new_order := <- ch.New_order_ch:
+			fmt.Printf("New order \n")
 			eventNewOrder(new_order, ch)
 		case floor = <- ch.Floor_reached_ch:
+			fmt.Printf("New floor \n")
 			eventFloorReached(ch)
 		case <- ch.Timeout_ch:
+			fmt.Printf("Timeout \n")
 			eventTimeout()
 		}
 	}
@@ -55,7 +58,6 @@ func Run(ch Channels){
 
 
 func DoorTimer( Start_timer_ch chan bool, Timeout_ch chan bool) {
-	fmt.Printf("timer")
 	const door_open_dur = 3 * time.Second
 	timer := time.NewTimer(0)
 	timer.Stop()
@@ -72,12 +74,12 @@ func DoorTimer( Start_timer_ch chan bool, Timeout_ch chan bool) {
 }
 
 func OM_isQueueEmpty() bool {
-	for i := 0; i < 4; i++ {
+	for i := 0; i < def.NUM_FLOORS; i++ {
 		if requests[i] {
-			return true
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func OM_chooseDirection() elevio.MotorDirection {
@@ -95,12 +97,13 @@ func OM_chooseDirection() elevio.MotorDirection {
 			}
 		}
 	} else if direction == elevio.MD_Up {
-		for i:= floor+1; i < 4; i++ {
+		for i:= floor+1; i < def.NUM_FLOORS; i++ {
 			if requests[i] {
 				dir =  elevio.MD_Up
 			}
 		}
-	} else if dir == elevio.MD_Stop {
+	} 
+	if dir == elevio.MD_Stop {
 		dir = -1*direction
 	}
 
@@ -128,11 +131,11 @@ func eventNewOrder(new_order elevio.Order, ch Channels){
 			state = DOOR_OPEN
 		} else {
 			if new_order.Floor < floor {
-				elevio.SetMotorDirection(elevio.MD_Down)
+				direction = elevio.MD_Down
 			} else {
-				elevio.SetMotorDirection(elevio.MD_Up)
+				direction = elevio.MD_Up
 			}
-			
+			elevio.SetMotorDirection(direction)
 			state = MOVING
 		}
 
@@ -158,6 +161,10 @@ func eventFloorReached(ch Channels){
 		ch.Start_timer_ch <- true
 		state = DOOR_OPEN
 	}
+	if floor == 0 || floor == def.NUM_FLOORS-1{
+		direction = -1*direction
+	}
+	
 }
 
 
@@ -165,16 +172,21 @@ func eventFloorReached(ch Channels){
 func eventTimeout(){
 
 	elevio.SetDoorOpenLamp(false)
-	//
+	elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
+	elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
+	elevio.SetButtonLamp(elevio.BT_Cab, floor, false)
 
 	requests[floor] = false
 
-	direction = OM_chooseDirection()
-
 	if OM_isQueueEmpty() {
+		fmt.Printf("IDLE \n")
 		state = IDLE
 	} else {
-		direction = OM_chooseDirection()
+		new_dir := OM_chooseDirection()
+		if new_dir != elevio.MD_Stop{
+			direction = new_dir
+		}
+		elevio.SetMotorDirection(new_dir)
 		state = MOVING
 	}
 }
