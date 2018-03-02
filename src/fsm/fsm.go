@@ -30,14 +30,25 @@ var state int
 var direction elevio.MotorDirection
 var floor int
 //var requests [def.NUM_FLOORS] bool
-var requests [] bool //slice > array :)
+//var requests [] bool //slice > array :)
+var requests[][] bool 
 
 
 func Init(current_floor int){
 	floor = current_floor
 	state = IDLE
 	//requests = [4]bool{false, false, false, false}
-	request = make([]bool, def.NUM_FLOORS, def.NUM_FLOORS )
+	//request = make([]bool, def.NUM_FLOORS, def.NUM_FLOORS )
+
+	requests = make([][]bool, def.NUM_FLOORS)
+    for i := 0; floor < def.NUM_FLOORS; i++ {
+        request = make([]bool, def.NUM_BUTTON_TYPES)
+        for j := 0; button < def.NUM_BUTTON_TYPES; j++ {
+            request[floor][button] = false;
+        }
+    }
+
+
 }
 
 
