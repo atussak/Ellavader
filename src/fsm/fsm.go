@@ -29,13 +29,15 @@ type Channels struct{
 var state int
 var direction elevio.MotorDirection
 var floor int
-var requests [def.NUM_FLOORS] bool
+//var requests [def.NUM_FLOORS] bool
+var requests [] bool //slice > array :)
 
 
 func Init(current_floor int){
 	floor = current_floor
 	state = IDLE
-	requests = [4]bool{false, false, false, false}
+	//requests = [4]bool{false, false, false, false}
+	request = make([]bool, def.NUM_FLOORS, def.NUM_FLOORS )
 }
 
 
