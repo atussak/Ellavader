@@ -5,6 +5,7 @@ import(
 	"time"
 	"fmt"
 	def "../definitions"
+	OM "../orderManager"
 )
 
 
@@ -178,11 +179,13 @@ func eventTimeout(){
 
 	requests[floor] = false
 
-	if OM_isQueueEmpty() {
+	//if OM_isQueueEmpty() {
+	if OM.isQueueEmpty(requests) {
 		fmt.Printf("IDLE \n")
 		state = IDLE
 	} else {
-		new_dir := OM_chooseDirection()
+		//new_dir := OM_chooseDirection()
+		new_dir := OM.ChooseDirection(requests, floor, direction)
 		if new_dir != elevio.MD_Stop{
 			direction = new_dir
 		}
