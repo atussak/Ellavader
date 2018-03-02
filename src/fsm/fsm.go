@@ -140,7 +140,7 @@ func eventNewOrder(new_order elevio.Order, ch Channels){
 	switch state {
 
 	case IDLE:
-		if floor == new_order.Floor {
+		if floor == new_order.Floor{
 			ch.Start_timer_ch <- true
 			state = DOOR_OPEN
 		} else {
@@ -169,11 +169,14 @@ func eventFloorReached(ch Channels){
 
 	elevio.SetFloorIndicator(floor)
 
-	if requests[floor] {
-		elevio.SetMotorDirection(elevio.MD_Stop)
-		elevio.SetDoorOpenLamp(true)
-		ch.Start_timer_ch <- true
-		state = DOOR_OPEN
+	if OM.isOrderInFloor(requests, floor) {
+		if direction == elevio.MD_Down && requests[floor][elevio.BT_HallDown] || 
+			direction == elevio.MD_Up && requests[floor][elevio.BT_HallUp] {
+			elevio.SetMotorDirection(elevio.MD_Stop)
+			elevio.SetDoorOpenLamp(true)
+			ch.Start_timer_ch <- true
+			state = DOOR_OPEN
+		}
 	}
 	if floor == 0 || floor == def.NUM_FLOORS-1{
 		direction = -1*direction
@@ -205,4 +208,5 @@ func eventTimeout(){
 		elevio.SetMotorDirection(new_dir)
 		state = MOVING
 	}
+	
 }
