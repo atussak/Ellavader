@@ -3,6 +3,7 @@ package main
 import (
     "./elevio"
     "./fsm"
+    def "./definitions"
     //"./orderManager"
     //"fmt"
 )
@@ -10,9 +11,7 @@ import (
 
 func main(){
 	
-	numFloors := 4
-	elevio.Init("localhost:15658", numFloors)
-	
+	elevio.Init("localhost:15657", def.NUM_FLOORS)
 
     ch := fsm.Channels {
         New_order_ch:       make(chan elevio.Order),
