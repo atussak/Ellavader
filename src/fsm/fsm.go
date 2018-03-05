@@ -29,22 +29,23 @@ type Channels struct{
 var state int
 var direction elevio.MotorDirection
 var floor int
-//var requests [def.NUM_FLOORS] bool
-//var requests [] bool //slice > array :)
-var requests[][] bool 
+//var OM.Requests [def.NUM_FLOORS] bool
+//var OM.Requests [] bool //slice > array :)
+
 
 
 func Init(current_floor int){
 	floor = current_floor
 	state = IDLE
-	//requests = [4]bool{false, false, false, false}
+	fmt.Printf("IDLE\n")
+	//OM.Requests = [4]bool{false, false, false, false}
 	//request = make([]bool, def.NUM_FLOORS, def.NUM_FLOORS )
 
-	requests = make([][]bool, def.NUM_FLOORS)
-    for i := 0; floor < def.NUM_FLOORS; i++ {
-        request = make([]bool, def.NUM_BUTTON_TYPES)
-        for j := 0; button < def.NUM_BUTTON_TYPES; j++ {
-            request[floor][button] = false;
+	OM.Requests = make([][]bool, def.NUM_FLOORS)
+    for floor := 0; floor < def.NUM_FLOORS; floor++ {
+        OM.Requests[floor] = make([]bool, def.NUM_BUTTON_TYPES)
+        for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
+            OM.Requests[floor][button] = false;
         }
     }
 
@@ -87,52 +88,11 @@ func DoorTimer( Start_timer_ch chan bool, Timeout_ch chan bool) {
 	}
 }
 
-func OM_isQueueEmpty() bool {
-	for i := 0; i < def.NUM_FLOORS; i++ {
-		if requests[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func OM_chooseDirection() elevio.MotorDirection {
-
-	var dir elevio.MotorDirection = elevio.MD_Stop 
-
-	if OM_isQueueEmpty() {
-		return dir
-	}
-
-	if direction == elevio.MD_Down {
-		for i:= floor-1; i >= 0; i-- {
-			if requests[i] {
-				dir = elevio.MD_Down
-			}
-		}
-	} else if direction == elevio.MD_Up {
-		for i:= floor+1; i < def.NUM_FLOORS; i++ {
-			if requests[i] {
-				dir =  elevio.MD_Up
-			}
-		}
-	} 
-	if dir == elevio.MD_Stop {
-		dir = -1*direction
-	}
-
-	return dir
-	
-
-}
-
-
-
 
 func eventNewOrder(new_order elevio.Order, ch Channels){
 
 	// add new order to queue
-	requests[new_order.Floor][new_order.Button] = true
+	OM.Requests[new_order.Floor][new_order.Button] = true
 
 	// turn on lamp for button pressed
 	elevio.SetButtonLamp(new_order.Button, new_order.Floor, true)
@@ -141,8 +101,10 @@ func eventNewOrder(new_order elevio.Order, ch Channels){
 
 	case IDLE:
 		if floor == new_order.Floor{
+			elevio.SetDoorOpenLamp(true)
 			ch.Start_timer_ch <- true
 			state = DOOR_OPEN
+			fmt.Printf("DOOR_OPEN\n")
 		} else {
 			if new_order.Floor < floor {
 				direction = elevio.MD_Down
@@ -151,15 +113,16 @@ func eventNewOrder(new_order elevio.Order, ch Channels){
 			}
 			elevio.SetMotorDirection(direction)
 			state = MOVING
+			fmt.Printf("MOVING\n")
 		}
 
 	case MOVING:
 		// Do nothing
 
 	case DOOR_OPEN:
-		if floor == new_order.Floor {
+		if OM.ShouldStopForOrder(new_order, direction, floor) {
 			ch.Start_timer_ch <- true
-		}
+		} 
 	}
 }
 
@@ -169,15 +132,15 @@ func eventFloorReached(ch Channels){
 
 	elevio.SetFloorIndicator(floor)
 
-	if OM.isOrderInFloor(requests, floor) {
-		if direction == elevio.MD_Down && requests[floor][elevio.BT_HallDown] || 
-			direction == elevio.MD_Up && requests[floor][elevio.BT_HallUp] {
-			elevio.SetMotorDirection(elevio.MD_Stop)
-			elevio.SetDoorOpenLamp(true)
-			ch.Start_timer_ch <- true
-			state = DOOR_OPEN
-		}
+	if OM.ShouldStop(direction, floor) {
+		elevio.SetMotorDirection(elevio.MD_Stop)
+		elevio.SetDoorOpenLamp(true)
+		ch.Start_timer_ch <- true
+		state = DOOR_OPEN
+		fmt.Printf("DOOR_OPEN\n")
 	}
+
+	// Change direction in top and bottom floor
 	if floor == 0 || floor == def.NUM_FLOORS-1{
 		direction = -1*direction
 	}
@@ -185,28 +148,22 @@ func eventFloorReached(ch Channels){
 }
 
 
-
 func eventTimeout(){
 
-	elevio.SetDoorOpenLamp(false)
-	elevio.SetButtonLamp(elevio.BT_HallUp, floor, false)
-	elevio.SetButtonLamp(elevio.BT_HallDown, floor, false)
-	elevio.SetButtonLamp(elevio.BT_Cab, floor, false)
+	OM.ClearOrder(floor, direction)
 
-	requests[floor] = false
-
-	//if OM_isQueueEmpty() {
-	if OM.isQueueEmpty(requests) {
+	if OM.IsQueueEmpty() {
 		fmt.Printf("IDLE \n")
 		state = IDLE
 	} else {
 		//new_dir := OM_chooseDirection()
-		new_dir := OM.ChooseDirection(requests, floor, direction)
+		new_dir := OM.ChooseDirection(floor, direction)
 		if new_dir != elevio.MD_Stop{
 			direction = new_dir
 		}
 		elevio.SetMotorDirection(new_dir)
 		state = MOVING
+		fmt.Printf("MOVING\n")
 	}
 	
 }
