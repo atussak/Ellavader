@@ -5,16 +5,13 @@ import(
 	def "../definitions"
 )
 
+var Requests[][] bool 
 
-type Order struct{
-	Button elevio.ButtonType
-	Floor int
-}
 
-func isQueueEmpty(requests [][]bool) bool {
+func IsQueueEmpty() bool {
 	for floor := 0; floor < def.NUM_FLOORS; floor++ {
 		for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
-			if requests[floor][button] {
+			if Requests[floor][button] {
 				return false
 			}
 		}
@@ -22,45 +19,43 @@ func isQueueEmpty(requests [][]bool) bool {
 	return true
 }
 
-func isOrderInFloor(requests [][]bool, floor int) {
-	for button := 0; button <= def.NUM_BUTTON_TYPES; button++ {
-		if requests[floor][button] {
+func IsOrderInFloor(floor int) bool{
+	for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
+		if Requests[floor][button] {
 			return true
 		}
 	}
 	return false
 }
 
-func isOrdersAbove(requests [][]bool, current_floor int) bool {
+func IsOrderAbove(current_floor int) bool {
 	for floor:= current_floor+1; floor < def.NUM_FLOORS; floor++ {
-		if isOrderInFloor(requests, floor) {
+		if IsOrderInFloor(floor) {
 			return true
 		}
 	}
 	return false
 }
 
-func isOrdersBelow(requests [][]bool, current_floor int) bool {
+func IsOrderBelow(current_floor int) bool {
 	for floor:= current_floor-1; floor >= 0; floor-- {
-		if isOrderInFloor(requests, floor) {
+		if IsOrderInFloor(floor) {
 			return true
 		}
 	}
 	return false
 }
 
+func ChooseDirection(current_floor int, current_direction elevio.MotorDirection) elevio.MotorDirection {
 
+	if IsQueueEmpty() { return elevio.MD_Stop }
 
-func ChooseDirection(requests [][]bool, current_floor int, current_direction elevio.Motor) {
-
-	if isQueueEmpty(requests) { return elevio.MD_Stop }
-
-	if current_direction = elevio.MD_Up {
-		if isOrdersAbove(requests, current_floor) {
+	if current_direction == elevio.MD_Up {
+		if IsOrderAbove(current_floor) {
 			return current_direction
 		}
-	} else if current_direction = elevio.MD_Down {
-		if isOrdersBelow(requests, current_floor) {
+	} else if current_direction == elevio.MD_Down {
+		if IsOrderBelow(current_floor) {
 			return current_direction
 		}
 	}
@@ -68,4 +63,51 @@ func ChooseDirection(requests [][]bool, current_floor int, current_direction ele
 	return -1*current_direction
 }
 
+func ShouldStopForOrder(order elevio.Order, direction elevio.MotorDirection, current_floor int) bool{
+	
+	if current_floor != order.Floor { return false}
 
+	if order.Button == elevio.BT_Cab { return true }
+
+	if direction == elevio.MD_Up && IsOrderAbove(current_floor) {
+		return order.Button == elevio.BT_HallUp
+	} else if direction == elevio.MD_Down && IsOrderBelow(current_floor) {
+		return order.Button == elevio.BT_HallDown
+	} else {
+		return true
+	}
+	
+}
+
+func ShouldStop(direction elevio.MotorDirection, current_floor int) bool{
+
+	execute_cab := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_Cab}, direction, current_floor)
+	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)
+	execute_down := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallDown}, direction, current_floor)
+
+	return execute_cab && Requests[current_floor][elevio.BT_Cab] ||
+		execute_down && Requests[current_floor][elevio.BT_HallDown] ||
+		execute_up && Requests[current_floor][elevio.BT_HallUp]
+
+}
+
+func ClearOrder(current_floor int, direction elevio.MotorDirection){
+
+	elevio.SetDoorOpenLamp(false)
+	elevio.SetButtonLamp(elevio.BT_Cab, current_floor, false)
+	Requests[current_floor][elevio.BT_Cab] = false
+
+	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)
+	execute_down := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallDown}, direction, current_floor)
+
+
+	if execute_down {
+		elevio.SetButtonLamp(elevio.BT_HallDown, current_floor, false)
+		Requests[current_floor][elevio.BT_HallDown] = false
+	}
+	if execute_up {
+		elevio.SetButtonLamp(elevio.BT_HallUp, current_floor, false)
+		Requests[current_floor][elevio.BT_HallUp] = false	
+	}
+	
+}
