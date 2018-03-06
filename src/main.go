@@ -4,7 +4,8 @@ import (
     "./elevio"
     "./fsm"
     def "./definitions"
-    //"./orderManager"
+    "../localip"
+    OM "./orderManager"
     //"fmt"
 )
 
@@ -12,6 +13,16 @@ import (
 func main(){
 	
 	elevio.Init("localhost:15657", def.NUM_FLOORS)
+
+    // Variables
+
+    peer_port := 15647 //anything?
+    local_port := 20015
+
+    current_floor := <-ch.Floor_reached_ch
+
+
+    // Channels
 
     ch := fsm.Channels {
         New_order_ch:       make(chan elevio.Order),
@@ -22,55 +33,33 @@ func main(){
         Timeout_ch:         make(chan bool),
     }
 
-    peer_update_ch := make(chan peers.PeerUpdate) 
+
     peer_tx_enable := make(chan bool)
-    
-    elev_update_ch := make(chan net.ElevatorUpdate)
-    elev_tx_enable := make
-    new_remote_order_ch := make()
+    peer_update_ch := make(chan peers.PeerUpdate) 
+
+    elev_update_tx_ch := make(chan OM.ElevatorData)
+    elev_update_rx_ch := make(chan OM.ElevatorData)
+
+
+    // Goroutines
 
     go elevio.PollButtons(ch.New_order_ch)
     go elevio.PollFloorSensor(ch.Floor_reached_ch)
 
-    current_floor := <-ch.Floor_reached_ch
-
-    fsm.Init(current_floor)
-
     go fsm.DoorTimer(ch.Start_timer_ch, ch.Timeout_ch)
     go fsm.Run(ch)
 
+    go peers.Transmitter(peer_port, peer_tx_enable)
+    go peers.Receiver(peer_port, peer_update_ch)
+    go bcast.Transmitter(local_port, elev_update_tx_ch)
+    go bcast.Receiver(local_port, elev_update_rx_ch)
+
 
     for{
-    	
-    }
-    
-    /*
-    var d elevio.MotorDirection = elevio.MD_Up
-    elevio.SetMotorDirection(d)
-    
-    //drv_buttons := make(chan elevio.Order)
-    //drv_floors  := make(chan int)  
-    
-    //go elevio.PollButtons(drv_buttons)
-    //go elevio.PollFloorSensor(drv_floors)
-    
-    
-
-    for {
-        select {
-        case a := <- ch.New_order_ch:
-            fmt.Printf("%+v\n", a)
-            elevio.SetButtonLamp(a.Button, a.Floor, true)
-            
-        case a := <- ch.Floor_reached_ch:
-            fmt.Printf("%+v\n", a)
-            if a == numFloors-1 {
-                d = elevio.MD_Down
-            } else if a == 0 {
-                d = elevio.MD_Up
-            }
-            elevio.SetMotorDirection(d)
-            
+        select{
+        case elev_update := <- elev_update_rx_ch:
+            OM.UpdateElevatorDatabase(elev_update)
         }
-    }    */
+
+    }
 }
