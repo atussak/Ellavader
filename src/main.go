@@ -22,7 +22,12 @@ func main(){
         Timeout_ch:         make(chan bool),
     }
 
+    peer_update_ch := make(chan peers.PeerUpdate) 
+    peer_tx_enable := make(chan bool)
     
+    elev_update_ch := make(chan net.ElevatorUpdate)
+    elev_tx_enable := make
+    new_remote_order_ch := make()
 
     go elevio.PollButtons(ch.New_order_ch)
     go elevio.PollFloorSensor(ch.Floor_reached_ch)
