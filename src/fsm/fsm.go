@@ -23,15 +23,15 @@ type Channels struct{
 
 	Start_timer_ch chan bool
 	Timeout_ch chan bool
+
+	peer_update_ch
+
 }
 
 
 var state int
 var direction elevio.MotorDirection
 var floor int
-//var OM.Requests [def.NUM_FLOORS] bool
-//var OM.Requests [] bool //slice > array :)
-
 
 
 func Init(current_floor int){
@@ -59,12 +59,15 @@ func Run(ch Channels){
 		select {
 		// Go routine in main polling buttons	
 		case new_order := <- ch.New_order_ch:
+			//oppdater elevator_database[local_ID]
 			fmt.Printf("New order \n")
 			eventNewOrder(new_order, ch)
 		case floor = <- ch.Floor_reached_ch:
+			//oppdater elevator_database[local_ID]
 			fmt.Printf("New floor \n")
 			eventFloorReached(ch)
 		case <- ch.Timeout_ch:
+			//oppdater elevator_database[local_ID]
 			fmt.Printf("Timeout \n")
 			eventTimeout()
 		}
