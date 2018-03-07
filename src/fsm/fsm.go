@@ -9,12 +9,6 @@ import(
 )
 
 
-const (
-	IDLE = 0
-	MOVING = 1
-	DOOR_OPEN = 2
-)
-
 
 type Channels struct{
 	New_order_ch chan elevio.Order
