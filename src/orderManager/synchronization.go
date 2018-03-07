@@ -19,9 +19,9 @@ type ElevatorData struct {
 
 var elevator_database map[int]ElevatorData
 
-Local_data := ElevatorData{
+var Local_data ElevatorData = ElevatorData{
 	ID: 		20015,
-	State: 		IDLE,
+	State: 		def.IDLE,
 	Floor:		0,
 	Direction: 	elevio.MD_Up,
 	Requests: 	Requests,
@@ -36,17 +36,15 @@ func UpdateElevatorDatabase(new_elev_data ElevatorData, elev_update_tx_ch chan E
 	}
 
 	elevator_database[new_elev_data.ID] = new_elev_data
-
-	
 }
 
-func RemoteOrderUpdate(prev_data ElevatorData, new_data ElevatorData) bool, int, elevio.ButtonType, bool {
+func RemoteOrderUpdate(prev_data ElevatorData, new_data ElevatorData) (bool, int, elevio.ButtonType, bool) {
 	prev_requests := prev_data.Requests
 	new_requests := new_data.Requests
 	for floor := 0; floor < def.NUM_FLOORS; floor++ {
 		for button := elevio.BT_HallUp; button <= elevio.BT_HallDown; button++ {
 			if prev_requests[floor][button] != new_requests[floor][button] {
-				return true,floor,button,new_requests[floor][button];
+				return true,floor,button,new_requests[floor][button]
 			}
 		} 
 	}
@@ -54,8 +52,8 @@ func RemoteOrderUpdate(prev_data ElevatorData, new_data ElevatorData) bool, int,
 }
 
 func UpdateLocalRequests(floor int, button elevio.ButtonType, value bool, elev_update_tx_ch chan ElevatorData) {
-	elevator_database[local_ID].Requests[floor][button] = value
+	elevator_database[Local_data.ID].Requests[floor][button] = value
 
-	elev_update_tx_ch <- elevator_database[local_ID]
+	elev_update_tx_ch <- elevator_database[Local_data.ID]
 }
 

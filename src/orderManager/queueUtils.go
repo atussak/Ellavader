@@ -3,6 +3,7 @@ package orderManager
 import(
 	"../elevio"
 	def "../definitions"
+	"fmt"
 )
 
 var Requests[][] bool 
@@ -80,6 +81,7 @@ func ShouldStopForOrder(order elevio.Order, direction elevio.MotorDirection, cur
 }
 
 func ShouldStop(direction elevio.MotorDirection, current_floor int) bool{
+	fmt.Printf("Current floort: %v \n", current_floor)
 
 	execute_cab := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_Cab}, direction, current_floor)
 	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)

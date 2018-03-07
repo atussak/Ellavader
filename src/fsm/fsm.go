@@ -17,9 +17,6 @@ type Channels struct{
 
 	Start_timer_ch chan bool
 	Timeout_ch chan bool
-
-	peer_update_ch
-
 }
 
 

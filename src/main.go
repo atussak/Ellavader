@@ -4,8 +4,10 @@ import (
     "./elevio"
     "./fsm"
     def "./definitions"
-    "../localip"
     OM "./orderManager"
+    "./peers"
+    "./bcast"
+    //"./localip"
     //"fmt"
 )
 
@@ -13,13 +15,6 @@ import (
 func main(){
 	
 	elevio.Init("localhost:15657", def.NUM_FLOORS)
-
-    // Variables
-
-    peer_port := 15647 //anything?
-    local_port := 20015
-
-    current_floor := <-ch.Floor_reached_ch
 
 
     // Channels
@@ -39,6 +34,14 @@ func main(){
 
     elev_update_tx_ch := make(chan OM.ElevatorData)
     elev_update_rx_ch := make(chan OM.ElevatorData)
+
+    // Variables
+
+    peer_port := 15647 //anything?
+    local_port := 20015
+
+
+    id := "id"
 
 
     // Goroutines
