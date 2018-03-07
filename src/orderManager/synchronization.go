@@ -3,6 +3,7 @@ package orderManager
 import(
 	"../elevio"
 	def "../definitions"
+	"fmt"
 )
 
 
@@ -28,6 +29,7 @@ local_data := ElevatorData{
 
 
 func UpdateElevatorDatabase(new_elev_data ElevatorData) {
+	fmt.Print("Received elevator update\n")
 	remote_order_update, floor, button, value := RemoteOrderUpdate(elevator_database[new_elev_data.ID], new_elev_data)
 	if remote_order_update {
 		UpdateLocalRequests(floor, button, value)
