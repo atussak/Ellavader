@@ -47,9 +47,9 @@ func main(){
     go elevio.PollFloorSensor(ch.Floor_reached_ch)
 
     go fsm.DoorTimer(ch.Start_timer_ch, ch.Timeout_ch)
-    go fsm.Run(ch)
+    go fsm.Run(ch, elev_update_tx_ch)
 
-    go peers.Transmitter(peer_port, peer_tx_enable)
+    go peers.Transmitter(peer_port, id, peer_tx_enable)
     go peers.Receiver(peer_port, peer_update_ch)
     go bcast.Transmitter(local_port, elev_update_tx_ch)
     go bcast.Receiver(local_port, elev_update_rx_ch)
@@ -58,7 +58,7 @@ func main(){
     for{
         select{
         case elev_update := <- elev_update_rx_ch:
-            OM.UpdateElevatorDatabase(elev_update)
+            OM.UpdateElevatorDatabase(elev_update, elev_update_tx_ch)
         }
 
     }
