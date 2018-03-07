@@ -53,7 +53,7 @@ func Init(current_floor int){
 }
 
 
-func Run(ch Channels){
+func Run(ch Channels, elev_update_tx_ch chan OM.ElevatorData){
 	for{
 
 		select {
@@ -61,7 +61,7 @@ func Run(ch Channels){
 		case new_order := <- ch.New_order_ch:
 			//oppdater elevator_database[local_ID]
 			fmt.Printf("New order \n")
-			eventNewOrder(new_order, ch)
+			eventNewOrder(new_order, ch, elev_update_tx_ch)
 		case floor = <- ch.Floor_reached_ch:
 			//oppdater elevator_database[local_ID]
 			fmt.Printf("New floor \n")
@@ -92,10 +92,11 @@ func DoorTimer( Start_timer_ch chan bool, Timeout_ch chan bool) {
 }
 
 
-func eventNewOrder(new_order elevio.Order, ch Channels){
+func eventNewOrder(new_order elevio.Order, ch Channels, elev_update_tx_ch chan OM.ElevatorData){
 
 	// add new order to queue
 	OM.Requests[new_order.Floor][new_order.Button] = true
+	OM.UpdateLocalRequests(new_order.Floor, new_order.Button, true, elev_update_tx_ch)
 
 	// turn on lamp for button pressed
 	elevio.SetButtonLamp(new_order.Button, new_order.Floor, true)
