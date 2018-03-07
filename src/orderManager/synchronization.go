@@ -19,7 +19,7 @@ type ElevatorData struct {
 
 var elevator_database map[int]ElevatorData
 
-local_data := ElevatorData{
+Local_data := ElevatorData{
 	ID: 		20015,
 	State: 		IDLE,
 	Floor:		0,
