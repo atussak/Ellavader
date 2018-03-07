@@ -5,7 +5,7 @@
 
 type "cd" to go back to Home
 "ls -a" --> view all hidden files
-"vim bashrc"
+"vim .bashrc"
 "i" --> insert
 "export GOPATH=$HOME/ellavader" --> searches for src here. Must have an ellavader-folder in Home workspace with src-subfolder. 
 esc + ":wq" --> write, quit
