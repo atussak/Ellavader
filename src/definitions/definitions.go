@@ -8,8 +8,3 @@ const NUM_BUTTON_TYPES = 3
 const IDLE = 0
 const MOVING = 1
 const DOOR_OPEN = 2
-
-const LOCAL_ID = 20015
-
-
-
