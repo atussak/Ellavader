@@ -50,11 +50,7 @@ func main(){
     // Variables
 
     peer_port := 15647 //anything?
-    local_port := 20015
-
-
-    id := "id"
-
+    
 
     // Goroutines
 
@@ -64,10 +60,10 @@ func main(){
     go fsm.DoorTimer(ch.Start_timer_ch, ch.Timeout_ch)
     go fsm.Run(ch)
     
-    go peers.Transmitter(peer_port, id, peer_tx_enable)
+    go peers.Transmitter(peer_port, ip, peer_tx_enable)
     go peers.Receiver(peer_port, peer_update_ch)
-    go bcast.Transmitter(local_port, ch.Elev_update_tx_ch)
-    go bcast.Receiver(local_port, elev_update_rx_ch)
+    go bcast.Transmitter(peer_port, ch.Elev_update_tx_ch)
+    go bcast.Receiver(peer_port, elev_update_rx_ch)
 
 
     for{
