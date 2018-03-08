@@ -3,16 +3,14 @@ package orderManager
 import(
 	"../elevio"
 	def "../definitions"
-	"fmt"
+	//"fmt"
 )
-
-var Requests[][] bool 
 
 
 func IsQueueEmpty() bool {
 	for floor := 0; floor < def.NUM_FLOORS; floor++ {
 		for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
-			if Requests[floor][button] {
+			if Elevator_database[def.LOCAL_ID].Requests[floor][button] {
 				return false
 			}
 		}
@@ -22,7 +20,7 @@ func IsQueueEmpty() bool {
 
 func IsOrderInFloor(floor int) bool{
 	for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
-		if Requests[floor][button] {
+		if Elevator_database[def.LOCAL_ID].Requests[floor][button] {
 			return true
 		}
 	}
@@ -81,23 +79,22 @@ func ShouldStopForOrder(order elevio.Order, direction elevio.MotorDirection, cur
 }
 
 func ShouldStop(direction elevio.MotorDirection, current_floor int) bool{
-	fmt.Printf("Current floort: %v \n", current_floor)
-
 	execute_cab := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_Cab}, direction, current_floor)
 	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)
 	execute_down := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallDown}, direction, current_floor)
 
-	return execute_cab && Requests[current_floor][elevio.BT_Cab] ||
-		execute_down && Requests[current_floor][elevio.BT_HallDown] ||
-		execute_up && Requests[current_floor][elevio.BT_HallUp]
+	return execute_cab && Elevator_database[def.LOCAL_ID].Requests[current_floor][elevio.BT_Cab] ||
+		execute_down && Elevator_database[def.LOCAL_ID].Requests[current_floor][elevio.BT_HallDown] ||
+		execute_up && Elevator_database[def.LOCAL_ID].Requests[current_floor][elevio.BT_HallUp]
 
 }
 
-func ClearOrder(current_floor int, direction elevio.MotorDirection){
+func ClearOrder(current_floor int, direction elevio.MotorDirection, elev_update_tx_ch chan ElevatorData){
 
 	elevio.SetDoorOpenLamp(false)
 	elevio.SetButtonLamp(elevio.BT_Cab, current_floor, false)
-	Requests[current_floor][elevio.BT_Cab] = false
+	Elevator_database[def.LOCAL_ID].Requests[current_floor][elevio.BT_Cab] = false
+	UpdateLocalRequests(current_floor, elevio.BT_Cab, false, elev_update_tx_ch)
 
 	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)
 	execute_down := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallDown}, direction, current_floor)
@@ -105,11 +102,11 @@ func ClearOrder(current_floor int, direction elevio.MotorDirection){
 
 	if execute_down {
 		elevio.SetButtonLamp(elevio.BT_HallDown, current_floor, false)
-		Requests[current_floor][elevio.BT_HallDown] = false
+		UpdateLocalRequests(current_floor, elevio.BT_HallDown, false, elev_update_tx_ch)
 	}
 	if execute_up {
 		elevio.SetButtonLamp(elevio.BT_HallUp, current_floor, false)
-		Requests[current_floor][elevio.BT_HallUp] = false	
+		UpdateLocalRequests(current_floor, elevio.BT_HallUp, false, elev_update_tx_ch)	
 	}
 	
 }

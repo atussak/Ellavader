@@ -17,50 +17,36 @@ type Channels struct{
 
 	Start_timer_ch chan bool
 	Timeout_ch chan bool
+	Elev_update_tx_ch chan OM.ElevatorData
 }
 
 
-var state int
-var direction elevio.MotorDirection
 var floor int
 
 
-func Init(current_floor int){
-	floor = current_floor
-	state = def.IDLE
+func Init(current_floor int, ch Channels){
+	OM.UpdateLocalFloor(current_floor, ch.Elev_update_tx_ch)
+	OM.UpdateLocalState(def.IDLE, ch.Elev_update_tx_ch)
+
 	fmt.Printf("IDLE\n")
-	//OM.Requests = [4]bool{false, false, false, false}
-	//request = make([]bool, def.NUM_FLOORS, def.NUM_FLOORS )
-
-	OM.Requests = make([][]bool, def.NUM_FLOORS)
-    for floor := 0; floor < def.NUM_FLOORS; floor++ {
-        OM.Requests[floor] = make([]bool, def.NUM_BUTTON_TYPES)
-        for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
-            OM.Requests[floor][button] = false;
-        }
-    }
-
-
 }
 
 
-func Run(ch Channels, elev_update_tx_ch chan OM.ElevatorData){
+func Run(ch Channels){
 	for{
 
 		select {
 		// Go routine in main polling buttons	
 		case new_order := <- ch.New_order_ch:
-			//oppdater elevator_database[local_ID]
 			fmt.Printf("New order \n")
-			eventNewOrder(new_order, ch, elev_update_tx_ch)
-		case floor = <- ch.Floor_reached_ch:
-			//oppdater elevator_database[local_ID]
+			eventNewOrder(new_order, ch)
+		case floor := <- ch.Floor_reached_ch:
+			OM.UpdateLocalFloor(floor, ch.Elev_update_tx_ch)
 			fmt.Printf("New floor \n")
 			eventFloorReached(ch)
 		case <- ch.Timeout_ch:
-			//oppdater elevator_database[local_ID]
 			fmt.Printf("Timeout \n")
-			eventTimeout()
+			eventTimeout(ch)
 		}
 	}
 }
@@ -83,31 +69,30 @@ func DoorTimer( Start_timer_ch chan bool, Timeout_ch chan bool) {
 }
 
 
-func eventNewOrder(new_order elevio.Order, ch Channels, elev_update_tx_ch chan OM.ElevatorData){
+func eventNewOrder(new_order elevio.Order, ch Channels){
 
 	// add new order to queue
-	OM.Requests[new_order.Floor][new_order.Button] = true
-	OM.UpdateLocalRequests(new_order.Floor, new_order.Button, true, elev_update_tx_ch)
-
+	OM.Elevator_database[def.LOCAL_ID].Requests[new_order.Floor][new_order.Button] = true
+	OM.UpdateLocalRequests(new_order.Floor, new_order.Button, true, ch.Elev_update_tx_ch)
 	// turn on lamp for button pressed
 	elevio.SetButtonLamp(new_order.Button, new_order.Floor, true)
 
-	switch state {
+	switch OM.Elevator_database[def.LOCAL_ID].State {
 
 	case def.IDLE:
-		if floor == new_order.Floor{
+		if OM.Elevator_database[def.LOCAL_ID].Floor == new_order.Floor{
 			elevio.SetDoorOpenLamp(true)
 			ch.Start_timer_ch <- true
-			state = def.DOOR_OPEN
+			OM.UpdateLocalState(def.DOOR_OPEN, ch.Elev_update_tx_ch)
 			fmt.Printf("DOOR_OPEN\n")
 		} else {
-			if new_order.Floor < floor {
-				direction = elevio.MD_Down
+			if new_order.Floor < OM.Elevator_database[def.LOCAL_ID].Floor {
+				OM.UpdateLocalDirection(elevio.MD_Down, ch.Elev_update_tx_ch)
 			} else {
-				direction = elevio.MD_Up
+				OM.UpdateLocalDirection(elevio.MD_Up, ch.Elev_update_tx_ch)
 			}
-			elevio.SetMotorDirection(direction)
-			state = def.MOVING
+			elevio.SetMotorDirection(OM.Elevator_database[def.LOCAL_ID].Direction)
+			OM.UpdateLocalState(def.MOVING, ch.Elev_update_tx_ch)
 			fmt.Printf("MOVING\n")
 		}
 
@@ -115,7 +100,7 @@ func eventNewOrder(new_order elevio.Order, ch Channels, elev_update_tx_ch chan O
 		// Do nothing
 
 	case def.DOOR_OPEN:
-		if OM.ShouldStopForOrder(new_order, direction, floor) {
+		if OM.ShouldStopForOrder(new_order, OM.Elevator_database[def.LOCAL_ID].Direction, OM.Elevator_database[def.LOCAL_ID].Floor) {
 			ch.Start_timer_ch <- true
 		} 
 	}
@@ -125,39 +110,39 @@ func eventNewOrder(new_order elevio.Order, ch Channels, elev_update_tx_ch chan O
 func eventFloorReached(ch Channels){
 	// current state is MOVING
 
-	elevio.SetFloorIndicator(floor)
+	elevio.SetFloorIndicator(OM.Elevator_database[def.LOCAL_ID].Floor)
 
-	if OM.ShouldStop(direction, floor) {
+	if OM.ShouldStop(OM.Elevator_database[def.LOCAL_ID].Direction, OM.Elevator_database[def.LOCAL_ID].Floor) {
 		elevio.SetMotorDirection(elevio.MD_Stop)
 		elevio.SetDoorOpenLamp(true)
 		ch.Start_timer_ch <- true
-		state = def.DOOR_OPEN
+		OM.UpdateLocalState(def.DOOR_OPEN, ch.Elev_update_tx_ch)
 		fmt.Printf("DOOR_OPEN\n")
 	}
 
 	// Change direction in top and bottom floor
-	if floor == 0 || floor == def.NUM_FLOORS-1{
-		direction = -1*direction
+	if OM.Elevator_database[def.LOCAL_ID].Floor == 0 || OM.Elevator_database[def.LOCAL_ID].Floor == def.NUM_FLOORS-1{
+		OM.UpdateLocalDirection(-1*OM.Elevator_database[def.LOCAL_ID].Direction, ch.Elev_update_tx_ch)
 	}
 	
 }
 
 
-func eventTimeout(){
+func eventTimeout(ch Channels){
 
-	OM.ClearOrder(floor, direction)
+	OM.ClearOrder(OM.Elevator_database[def.LOCAL_ID].Floor, OM.Elevator_database[def.LOCAL_ID].Direction, ch.Elev_update_tx_ch)
 
 	if OM.IsQueueEmpty() {
 		fmt.Printf("IDLE \n")
-		state = def.IDLE
+		OM.UpdateLocalState(def.IDLE, ch.Elev_update_tx_ch)
 	} else {
 		//new_dir := OM_chooseDirection()
-		new_dir := OM.ChooseDirection(floor, direction)
+		new_dir := OM.ChooseDirection(OM.Elevator_database[def.LOCAL_ID].Floor, OM.Elevator_database[def.LOCAL_ID].Direction)
 		if new_dir != elevio.MD_Stop{
-			direction = new_dir
+			OM.UpdateLocalDirection(new_dir, ch.Elev_update_tx_ch)
 		}
 		elevio.SetMotorDirection(new_dir)
-		state = def.MOVING
+		OM.UpdateLocalState(def.MOVING, ch.Elev_update_tx_ch)
 		fmt.Printf("MOVING\n")
 	}
 	
