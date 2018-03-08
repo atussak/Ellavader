@@ -14,8 +14,8 @@ import (
 
 func main(){
 	
-	elevio.Init("localhost:15657", def.NUM_FLOORS)
-
+    elevio.Init("localhost:15657", def.NUM_FLOORS)
+    OM.Init()
 
     // Channels
 
@@ -26,14 +26,19 @@ func main(){
 
         Start_timer_ch:     make(chan bool),
         Timeout_ch:         make(chan bool),
+        Elev_update_tx_ch:  make(chan OM.ElevatorData, 100),
     }
 
 
     peer_tx_enable := make(chan bool)
     peer_update_ch := make(chan peers.PeerUpdate) 
 
-    elev_update_tx_ch := make(chan OM.ElevatorData)
-    elev_update_rx_ch := make(chan OM.ElevatorData)
+    elev_update_rx_ch := make(chan OM.ElevatorData, 100)
+
+    // Inits
+
+    
+    fsm.Init(0, ch)
 
     // Variables
 
