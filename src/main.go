@@ -8,14 +8,21 @@ import (
     "./peers"
     "./bcast"
     //"./localip"
-    //"fmt"
+    "fmt"
+    "os"
+    "strconv"
 )
 
 
 func main(){
-	
-    elevio.Init("localhost:15657", def.NUM_FLOORS)
-    OM.Init()
+
+    ip := os.Args[1]
+	host := fmt.Sprintf("localhost:%s",ip)
+    local_port,_ := strconv.Atoi(ip)
+
+
+    elevio.Init(host, def.NUM_FLOORS)
+    OM.Init(local_port)
 
     // Channels
 

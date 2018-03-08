@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Script starts four elevator simulators
+
+gnome-terminal -x bash -c "echo 'Connect on IP: 15000';../../SimElevatorServer --port 15000; read -n1"
+gnome-terminal -x bash -c "echo 'Connect on IP: 15001';../../SimElevatorServer --port 15001; read -n1"
+gnome-terminal -x bash -c "echo 'Connect on IP: 15000';go run main.go 15000; read -n1"
+gnome-terminal -x bash -c "echo 'Connect on IP: 15001';go run main.go 15001; read -n1"
