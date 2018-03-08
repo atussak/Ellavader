@@ -49,12 +49,12 @@ func PrintElevatorDatabase() {
 
 
 
-func Init() {
+func Init(local_id int) {
 
 	Elevator_database = make(map[int]ElevatorData)
 
 	Local_data = ElevatorData{
-		ID: 		20015,
+		ID: 		local_id,
 		State: 		def.IDLE,
 		Floor:		0,
 		Direction: 	elevio.MD_Up,
@@ -96,29 +96,29 @@ func RemoteOrderUpdate(prev_data ElevatorData, new_data ElevatorData) (bool, int
 }
 
 func UpdateLocalRequests(floor int, button elevio.ButtonType, value bool, elev_update_tx_ch chan ElevatorData) {
-	t := Elevator_database[def.LOCAL_ID]
+	t := Elevator_database[Local_data.ID]
 	t.Requests[floor][button] = value
-	Elevator_database[def.LOCAL_ID] = t
-	elev_update_tx_ch <- Elevator_database[def.LOCAL_ID]
+	Elevator_database[Local_data.ID] = t
+	elev_update_tx_ch <- Elevator_database[Local_data.ID]
 }
 
 func UpdateLocalState(state int, elev_update_tx_ch chan ElevatorData) {
-	t := Elevator_database[def.LOCAL_ID]
+	t := Elevator_database[Local_data.ID]
 	t.State = state
-	Elevator_database[def.LOCAL_ID] = t
-	elev_update_tx_ch <- Elevator_database[def.LOCAL_ID]
+	Elevator_database[Local_data.ID] = t
+	elev_update_tx_ch <- Elevator_database[Local_data.ID]
 }
 
 func UpdateLocalFloor(floor int, elev_update_tx_ch chan ElevatorData) {
-	t := Elevator_database[def.LOCAL_ID]
+	t := Elevator_database[Local_data.ID]
 	t.Floor = floor
-	Elevator_database[def.LOCAL_ID] = t
-	elev_update_tx_ch <- Elevator_database[def.LOCAL_ID]
+	Elevator_database[Local_data.ID] = t
+	elev_update_tx_ch <- Elevator_database[Local_data.ID]
 }
 
 func UpdateLocalDirection(dir elevio.MotorDirection, elev_update_tx_ch chan ElevatorData) {
-	t := Elevator_database[def.LOCAL_ID]
+	t := Elevator_database[Local_data.ID]
 	t.Direction = dir
-	Elevator_database[def.LOCAL_ID] = t
-	elev_update_tx_ch <- Elevator_database[def.LOCAL_ID]
+	Elevator_database[Local_data.ID] = t
+	elev_update_tx_ch <- Elevator_database[Local_data.ID]
 }

@@ -10,7 +10,7 @@ import(
 func IsQueueEmpty() bool {
 	for floor := 0; floor < def.NUM_FLOORS; floor++ {
 		for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
-			if Elevator_database[def.LOCAL_ID].Requests[floor][button] {
+			if Elevator_database[Local_data.ID].Requests[floor][button] {
 				return false
 			}
 		}
@@ -20,7 +20,7 @@ func IsQueueEmpty() bool {
 
 func IsOrderInFloor(floor int) bool{
 	for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
-		if Elevator_database[def.LOCAL_ID].Requests[floor][button] {
+		if Elevator_database[Local_data.ID].Requests[floor][button] {
 			return true
 		}
 	}
@@ -83,9 +83,9 @@ func ShouldStop(direction elevio.MotorDirection, current_floor int) bool{
 	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)
 	execute_down := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallDown}, direction, current_floor)
 
-	return execute_cab && Elevator_database[def.LOCAL_ID].Requests[current_floor][elevio.BT_Cab] ||
-		execute_down && Elevator_database[def.LOCAL_ID].Requests[current_floor][elevio.BT_HallDown] ||
-		execute_up && Elevator_database[def.LOCAL_ID].Requests[current_floor][elevio.BT_HallUp]
+	return execute_cab && Elevator_database[Local_data.ID].Requests[current_floor][elevio.BT_Cab] ||
+		execute_down && Elevator_database[Local_data.ID].Requests[current_floor][elevio.BT_HallDown] ||
+		execute_up && Elevator_database[Local_data.ID].Requests[current_floor][elevio.BT_HallUp]
 
 }
 
@@ -93,7 +93,7 @@ func ClearOrder(current_floor int, direction elevio.MotorDirection, elev_update_
 
 	elevio.SetDoorOpenLamp(false)
 	elevio.SetButtonLamp(elevio.BT_Cab, current_floor, false)
-	Elevator_database[def.LOCAL_ID].Requests[current_floor][elevio.BT_Cab] = false
+	Elevator_database[Local_data.ID].Requests[current_floor][elevio.BT_Cab] = false
 	UpdateLocalRequests(current_floor, elevio.BT_Cab, false, elev_update_tx_ch)
 
 	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)
