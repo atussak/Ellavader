@@ -45,6 +45,15 @@ func IsOrderBelow(current_floor int) bool {
 	return false
 }
 
+func isOrderInDirection(order elevio.Order, direction elevio.MotorDirection) bool {
+	if order.Button == elevio.BT_HallUp && direction == elevio.MD_Up {
+		return true
+	} else if order.Button == elevio.BT_HallDown && direction == elevio.MD_Down {
+		return true
+	}
+	return false
+}
+
 func ChooseDirection(current_floor int, current_direction elevio.MotorDirection) elevio.MotorDirection {
 
 	if IsQueueEmpty() { return elevio.MD_Stop }
@@ -79,6 +88,8 @@ func ShouldStopForOrder(order elevio.Order, direction elevio.MotorDirection, cur
 }
 
 func ShouldStop(direction elevio.MotorDirection, current_floor int) bool{
+	if IsQueueEmpty() { return true }
+
 	execute_cab := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_Cab}, direction, current_floor)
 	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)
 	execute_down := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallDown}, direction, current_floor)
