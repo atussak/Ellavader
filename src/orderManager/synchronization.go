@@ -71,7 +71,7 @@ func Init(local_id int) {
 }
 
 func UpdateElevatorDatabase(new_elev_data ElevatorData, elev_update_tx_ch chan ElevatorData) {
-	fmt.Print("Received elevator update\n")
+	//fmt.Print("Received elevator update\n")
 
 	var remote_order_update bool
 	var value bool
@@ -85,12 +85,13 @@ func UpdateElevatorDatabase(new_elev_data ElevatorData, elev_update_tx_ch chan E
 	}
 	
 	if remote_order_update {
+		assignOrderToElevator(elevio.Order{floor, button})
 		UpdateLocalRequests(floor, button, value, elev_update_tx_ch)
 	}
 
 	Elevator_database[new_elev_data.ID] = new_elev_data
 
-	PrintElevatorDatabase()
+	//PrintElevatorDatabase()
 }
 
 func FirstRemoteOrderUpdate(new_data ElevatorData) (bool, int, elevio.ButtonType, bool) {
