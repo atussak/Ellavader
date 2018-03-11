@@ -94,18 +94,33 @@ func SetStopLamp(value bool) {
 
 
 
-func PollButtons(receiver chan<- Order) {
+func PollHallButtons(receiver chan<- Order) {
 	prev := make([][3]bool, _numFloors)
 	for {
 		time.Sleep(_pollRate)
 		for f := 0; f < _numFloors; f++ {
-			for b := ButtonType(0); b < 3; b++ {
+			for b := ButtonType(0); b < 2; b++ {
 				v := getButton(b, f)
 				if v != prev[f][b] && v != false {
 					receiver <- Order{f, ButtonType(b)}
 				}
 				prev[f][b] = v
 			}
+		}
+	}
+}
+
+func PollCabButtons(receiver chan<- Order) {
+	prev := make([][3]bool, _numFloors)
+	for {
+		time.Sleep(_pollRate)
+		for f := 0; f < _numFloors; f++ {
+			b := ButtonType(2);
+			v := getButton(b, f)
+			if v != prev[f][b] && v != false {
+				receiver <- Order{f, ButtonType(b)}
+			}
+			prev[f][b] = v
 		}
 	}
 }

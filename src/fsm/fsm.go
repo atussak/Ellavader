@@ -36,7 +36,7 @@ func Run(ch Channels){
 	for{
 
 		select {
-		// Go routine in main polling buttons	
+		// Go routine in main polling buttons
 		case new_order := <- ch.New_order_ch:
 			fmt.Printf("New order \n")
 			eventNewOrder(new_order, ch)
