@@ -45,11 +45,15 @@ func IsOrderBelow(current_floor int) bool {
 	return false
 }
 
-func isOrderInDirection(order elevio.Order, direction elevio.MotorDirection) bool {
-	if order.Button == elevio.BT_HallUp && direction == elevio.MD_Up {
-		return true
-	} else if order.Button == elevio.BT_HallDown && direction == elevio.MD_Down {
-		return true
+func isOrderInDirection(order elevio.Order, data ElevatorData) bool {
+	if order.Button == elevio.BT_HallUp && data.Direction == elevio.MD_Up {
+		if (data.State != def.MOVING && order.Floor == data.Floor) || order.Floor > data.Floor {
+			return true
+		}
+	} else if order.Button == elevio.BT_HallDown && data.Direction == elevio.MD_Down {
+		if (data.State != def.MOVING && order.Floor == data.Floor) || order.Floor < data.Floor {
+			return true
+		}
 	}
 	return false
 }
