@@ -57,7 +57,7 @@ func Init(local_id int) {
 		ID: 		local_id,
 		State: 		def.IDLE,
 		Floor:		0,
-		Direction: 	elevio.MD_Up,
+		Direction: 	elevio.MD_Down,
 		Requests: 	make([][]bool, def.NUM_FLOORS),
 	}
     for floor := 0; floor < def.NUM_FLOORS; floor++ {
