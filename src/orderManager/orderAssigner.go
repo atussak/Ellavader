@@ -10,9 +10,28 @@ import(
 func findElevatorInDirection(order elevio.Order, current_floor int) (bool, int){
 	ID := def.MAXIMUM_ID
 	elevator_found := false
+
 	for id, data := range Elevator_database {
-		fmt.Printf("1:\tChecking elevator %v", id)
-		if data.Floor == current_floor && isOrderInDirection(order, data.Direction){
+		fmt.Printf("1b:\tChecking elevator %v", id)
+		if data.Floor == current_floor && isOrderInDirection(order, data){
+			if id < ID {
+				ID = id
+				elevator_found = true
+				fmt.Printf("\tgood")
+			}
+		}
+		fmt.Printf("\n")
+	}
+	return elevator_found, ID
+}
+
+func findIdleElevatorInFloor(current_floor int) (bool, int) {
+	ID := def.MAXIMUM_ID
+	elevator_found := false
+
+	for id, data := range Elevator_database {
+		fmt.Printf("1a:\tChecking elevator %v", id)
+		if data.Floor == current_floor && data.State == def.IDLE{
 			if id < ID {
 				ID = id
 				elevator_found = true
@@ -53,10 +72,19 @@ func AssignOrderToElevator(order elevio.Order) int {
 	bottom_reached := false
 
 	for i := def.BOTTOM_FLOOR; i <= def.TOP_FLOOR; i++ {
+
+		// OBS! -ok- Er ikke vits å finne elevator in direction hvis den likevel må snu for å ta ordren!
+		// OBS! -ok- Heisen er ikke i data.Floor hvis den også er moving!
+		// OBS! 	 Det er ikke vits å bry seg om retningen til en heis uten ordre
+		//			 Da vil avstand være viktigst			 
+
 		if !top_reached {
 			current_floor := order.Floor + i
 			top_reached = (current_floor == def.TOP_FLOOR)
-			elevator_found, ID = findElevatorInDirection(order, current_floor)
+			elevator_found, ID = findIdleElevatorInFloor(current_floor)
+			if !elevator_found {
+				elevator_found, ID = findElevatorInDirection(order, current_floor)
+			}
 			if elevator_found {
 				fmt.Printf("1:\tFound elevator %v in floor %v\n", ID, current_floor)
 				return ID
@@ -66,7 +94,10 @@ func AssignOrderToElevator(order elevio.Order) int {
 		if !bottom_reached {
 			current_floor := order.Floor - i
 			bottom_reached = (current_floor == def.BOTTOM_FLOOR)
-			elevator_found, ID = findElevatorInDirection(order, current_floor)
+			elevator_found, ID = findIdleElevatorInFloor(current_floor)
+			if !elevator_found {
+				elevator_found, ID = findElevatorInDirection(order, current_floor)
+			}
 			if elevator_found {
 				fmt.Printf("1:\tFound elevator %v in floor %v\n", ID, current_floor)
 				return ID
