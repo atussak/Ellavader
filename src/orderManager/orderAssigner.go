@@ -37,7 +37,7 @@ func countOrders(data ElevatorData) int {
 // Takes in an order an chooses the best suited elevator to
 // execute the order. The function returns the ID of this
 // elevator.
-func assignOrderToElevator(order elevio.Order) int {
+func AssignOrderToElevator(order elevio.Order) int {
 	// Default ID is set to higher than any ID so that it is
 	// guranteed to be replaced by an actual elevator ID
 
