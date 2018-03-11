@@ -71,52 +71,8 @@ func Init(local_id int) {
 }
 
 func UpdateElevatorDatabase(new_elev_data ElevatorData, elev_update_tx_ch chan ElevatorData) {
-	//fmt.Print("Received elevator update\n")
-
-	var remote_order_update bool
-	var value bool
-	var floor int
-	var button elevio.ButtonType
-
-	if prev_data, ok := Elevator_database[new_elev_data.ID]; ok {
-		remote_order_update, floor, button, value = RemoteOrderUpdate(prev_data, new_elev_data)
-	} else {
-		remote_order_update, floor, button, value = FirstRemoteOrderUpdate(new_elev_data)
-	}
-	
-	if remote_order_update {
-		assignOrderToElevator(elevio.Order{floor, button})
-		UpdateLocalRequests(floor, button, value, elev_update_tx_ch)
-	}
-
 	Elevator_database[new_elev_data.ID] = new_elev_data
-
 	//PrintElevatorDatabase()
-}
-
-func FirstRemoteOrderUpdate(new_data ElevatorData) (bool, int, elevio.ButtonType, bool) {
-	new_requests := new_data.Requests
-	for floor := 0; floor < def.NUM_FLOORS; floor++ {
-		for button := elevio.BT_HallUp; button <= elevio.BT_HallDown; button++ {
-			if new_requests[floor][button] {
-				return true,floor,button,true
-			}
-		} 
-	}
-	return false,0,0,false
-}
-
-func RemoteOrderUpdate(prev_data ElevatorData, new_data ElevatorData) (bool, int, elevio.ButtonType, bool) {
-	prev_requests := prev_data.Requests
-	new_requests := new_data.Requests
-	for floor := 0; floor < def.NUM_FLOORS; floor++ {
-		for button := elevio.BT_HallUp; button <= elevio.BT_HallDown; button++ {
-			if prev_requests[floor][button] != new_requests[floor][button] {
-				return true,floor,button,new_requests[floor][button]
-			}
-		} 
-	}
-	return false,0,0,false
 }
 
 func UpdateLocalRequests(floor int, button elevio.ButtonType, value bool, elev_update_tx_ch chan ElevatorData) {
