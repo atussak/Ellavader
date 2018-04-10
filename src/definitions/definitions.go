@@ -12,3 +12,5 @@ const MOVING = 1
 const DOOR_OPEN = 2
 
 const MAXIMUM_ID = 99999
+
+const SPAM_LIMIT = 3
