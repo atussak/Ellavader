@@ -56,6 +56,7 @@ func main(){
 
     peer_port := 15647
     assign_port := 15648
+    order_ex_port := 15649
     
 
     // Goroutines
