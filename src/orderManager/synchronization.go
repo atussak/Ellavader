@@ -102,3 +102,9 @@ func UpdateLocalDirection(dir elevio.MotorDirection, elev_update_tx_ch chan Elev
 	Elevator_database[Local_data.ID] = t
 	elev_update_tx_ch <- Elevator_database[Local_data.ID]
 }
+
+
+
+func AcceptRemoteOrder(order elevio.Order) {
+	elevio.SetButtonLamp(order.Button, order.Floor, true)
+}
