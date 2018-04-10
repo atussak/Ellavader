@@ -14,6 +14,7 @@ type ElevatorData struct {
 	Floor		int
 	Direction	elevio.MotorDirection
 	Requests 	[][] bool
+	Hall_lights [][] bool
 }
 
 
@@ -59,11 +60,20 @@ func Init(local_id int) {
 		Floor:		0,
 		Direction: 	elevio.MD_Down,
 		Requests: 	make([][]bool, def.NUM_FLOORS),
+		Hall_lights:make([][]bool, def.NUM_FLOORS),
 	}
+
     for floor := 0; floor < def.NUM_FLOORS; floor++ {
         Local_data.Requests[floor] = make([]bool, def.NUM_BUTTON_TYPES)
         for button := 0; button < def.NUM_BUTTON_TYPES; button++ {
             Local_data.Requests[floor][button] = false;
+        }
+    }
+
+    for floor := 0; floor < def.NUM_FLOORS; floor++ {
+        Local_data.Hall_lights[floor] = make([]bool, def.NUM_BUTTON_TYPES-1)
+        for button := elevio.BT_HallUp; button <= elevio.BT_HallDown; button++ {
+            Local_data.Hall_lights[floor][button] = false;
         }
     }
 
