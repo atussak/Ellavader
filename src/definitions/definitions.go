@@ -13,4 +13,4 @@ const DOOR_OPEN = 2
 
 const MAXIMUM_ID = 99999
 
-const SPAM_LIMIT = 3
+const SPAM_LIMIT = 10
