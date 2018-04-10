@@ -75,7 +75,7 @@ func AssignOrderToElevator(order elevio.Order) int {
 
 		// OBS! -ok- Er ikke vits å finne elevator in direction hvis den likevel må snu for å ta ordren!
 		// OBS! -ok- Heisen er ikke i data.Floor hvis den også er moving!
-		// OBS! 	 Det er ikke vits å bry seg om retningen til en heis uten ordre
+		// OBS! -ok- Det er ikke vits å bry seg om retningen til en heis uten ordre
 		//			 Da vil avstand være viktigst			 
 
 		if !top_reached {
