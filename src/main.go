@@ -45,18 +45,19 @@ func main(){
 
     new_remote_order_tx_ch      := make(chan elevio.Order)
     new_remote_order_rx_ch      := make(chan elevio.Order, 100)
+
     remote_order_executed_rx_ch := make(chan elevio.Order, 100)
 
-    // Inits
 
+    // Inits
     
     fsm.Init(0, ch)
 
     // Variables
 
-    peer_port := 15647
-    assign_port := 15648
-    order_ex_port := 15649
+    peer_port       := 15647
+    bcast_port1     := 15648
+    bcast_port2     := 15649
     
 
     // Goroutines
@@ -66,26 +67,24 @@ func main(){
     go elevio.PollFloorSensor(ch.Floor_reached_ch)
 
 
-        // Start FSM
+    // Start FSM
 
     go fsm.DoorTimer(ch.Start_timer_ch, ch.Timeout_ch)
     go fsm.Run(ch)
 
     
-        // Elevator communication
+    // Elevator communication
 
     go peers.Transmitter(peer_port, ip, peer_tx_enable)
     go peers.Receiver(peer_port, peer_update_ch)
 
-    go bcast.Transmitter(peer_port, ch.Elev_update_tx_ch)
-    go bcast.Receiver(peer_port, elev_update_rx_ch)
+    go bcast.Transmitter(bcast_port1, ch.Elev_update_tx_ch, new_remote_order_tx_ch)
+    go bcast.Receiver(bcast_port1, elev_update_rx_ch, new_remote_order_rx_ch)
 
-    go bcast.Transmitter(assign_port, new_remote_order_tx_ch)
-    go bcast.Receiver(assign_port, new_remote_order_rx_ch)
+    go bcast.Transmitter(bcast_port2, ch.Remote_order_executed_tx_ch)
+    go bcast.Receiver(bcast_port2, remote_order_executed_rx_ch)
 
-    go bcast.Transmitter(order_ex_port, ch.Remote_order_executed_tx_ch)
-    go bcast.Receiver(order_ex_port, remote_order_executed_rx_ch)
-
+    // 
 
     for{
         select{
