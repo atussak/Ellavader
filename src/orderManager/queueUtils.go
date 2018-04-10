@@ -104,7 +104,7 @@ func ShouldStop(direction elevio.MotorDirection, current_floor int) bool{
 
 }
 
-func ClearOrder(current_floor int, direction elevio.MotorDirection, elev_update_tx_ch chan ElevatorData){
+func ClearOrder(current_floor int, direction elevio.MotorDirection, elev_update_tx_ch chan ElevatorData, Remote_order_executed_tx_ch chan elevio.Order){
 
 	elevio.SetDoorOpenLamp(false)
 	elevio.SetButtonLamp(elevio.BT_Cab, current_floor, false)
@@ -116,12 +116,12 @@ func ClearOrder(current_floor int, direction elevio.MotorDirection, elev_update_
 
 
 	if execute_down {
-		elevio.SetButtonLamp(elevio.BT_HallDown, current_floor, false)
 		UpdateLocalRequests(current_floor, elevio.BT_HallDown, false, elev_update_tx_ch)
+		Remote_order_executed_tx_ch <- elevio.Order{current_floor, elevio.BT_HallDown}
 	}
 	if execute_up {
-		elevio.SetButtonLamp(elevio.BT_HallUp, current_floor, false)
-		UpdateLocalRequests(current_floor, elevio.BT_HallUp, false, elev_update_tx_ch)	
+		UpdateLocalRequests(current_floor, elevio.BT_HallUp, false, elev_update_tx_ch)
+		Remote_order_executed_tx_ch <- elevio.Order{current_floor, elevio.BT_HallUp}	
 	}
 	
 }

@@ -27,23 +27,25 @@ func main(){
     // Channels
 
     ch := fsm.Channels {
-        New_order_ch:       make(chan elevio.Order),
-        Direction_ch:       make(chan int),
-        Floor_reached_ch:   make(chan int),
+        New_order_ch:                   make(chan elevio.Order),
+        Direction_ch:                   make(chan int),
+        Floor_reached_ch:               make(chan int),
 
-        Start_timer_ch:     make(chan bool),
-        Timeout_ch:         make(chan bool),
-        Elev_update_tx_ch:  make(chan OM.ElevatorData, 100),
+        Start_timer_ch:                 make(chan bool),
+        Timeout_ch:                     make(chan bool),
+        Elev_update_tx_ch:              make(chan OM.ElevatorData, 100),
+        Remote_order_executed_tx_ch:    make(chan elevio.Order),
     }
 
 
-    peer_tx_enable := make(chan bool)
-    peer_update_ch := make(chan peers.PeerUpdate) 
+    peer_tx_enable              := make(chan bool)
+    peer_update_ch              := make(chan peers.PeerUpdate) 
 
-    elev_update_rx_ch := make(chan OM.ElevatorData, 100)
+    elev_update_rx_ch           := make(chan OM.ElevatorData, 100)
 
-    new_remote_order_tx_ch := make(chan elevio.Order)
-    new_remote_order_rx_ch := make(chan elevio.Order, 100)
+    new_remote_order_tx_ch      := make(chan elevio.Order)
+    new_remote_order_rx_ch      := make(chan elevio.Order, 100)
+    remote_order_executed_rx_ch := make(chan elevio.Order, 100)
 
     // Inits
 
@@ -80,6 +82,9 @@ func main(){
     go bcast.Transmitter(assign_port, new_remote_order_tx_ch)
     go bcast.Receiver(assign_port, new_remote_order_rx_ch)
 
+    go bcast.Transmitter(order_ex_port, ch.Remote_order_executed_tx_ch)
+    go bcast.Receiver(order_ex_port, remote_order_executed_rx_ch)
+
 
     for{
         select{
@@ -88,9 +93,13 @@ func main(){
         
         case new_remote_order := <- new_remote_order_rx_ch:
             ID := OM.AssignOrderToElevator(new_remote_order)
+            // synchronize lights
+            OM.AcceptRemoteOrder(new_remote_order)
             if OM.Local_data.ID == ID {
                 ch.New_order_ch <- new_remote_order
             }
+        case executed_order := <- remote_order_executed_rx_ch:
+            elevio.SetButtonLamp(executed_order.Button, executed_order.Floor, false)
         }   
     }
 }

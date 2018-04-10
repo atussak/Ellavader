@@ -18,6 +18,7 @@ type Channels struct{
 	Start_timer_ch chan bool
 	Timeout_ch chan bool
 	Elev_update_tx_ch chan OM.ElevatorData
+	Remote_order_executed_tx_ch chan elevio.Order
 }
 
 
@@ -130,7 +131,7 @@ func eventFloorReached(ch Channels){
 
 func eventTimeout(ch Channels){
 
-	OM.ClearOrder(OM.Elevator_database[OM.Local_data.ID].Floor, OM.Elevator_database[OM.Local_data.ID].Direction, ch.Elev_update_tx_ch)
+	OM.ClearOrder(OM.Elevator_database[OM.Local_data.ID].Floor, OM.Elevator_database[OM.Local_data.ID].Direction, ch.Elev_update_tx_ch, ch.Remote_order_executed_tx_ch)
 
 	if OM.IsQueueEmpty() {
 		fmt.Printf("IDLE \n")
