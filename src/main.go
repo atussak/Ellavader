@@ -94,12 +94,13 @@ func main(){
         case new_remote_order := <- new_remote_order_rx_ch:
             ID := OM.AssignOrderToElevator(new_remote_order)
             // synchronize lights
-            OM.AcceptRemoteOrder(new_remote_order)
+            OM.RegisterOrder(new_remote_order, ch.Elev_update_tx_ch)
+            go OM.AcceptRemoteOrder(new_remote_order)
             if OM.Local_data.ID == ID {
                 ch.New_order_ch <- new_remote_order
             }
         case executed_order := <- remote_order_executed_rx_ch:
             elevio.SetButtonLamp(executed_order.Button, executed_order.Floor, false)
-        }   
+        }
     }
 }

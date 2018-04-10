@@ -113,8 +113,27 @@ func UpdateLocalDirection(dir elevio.MotorDirection, elev_update_tx_ch chan Elev
 	elev_update_tx_ch <- Elevator_database[Local_data.ID]
 }
 
-
+func RegisterOrder(order elevio.Order, elev_update_tx_ch chan ElevatorData) {
+	t := Elevator_database[Local_data.ID]
+	t.Hall_lights[order.Floor][order.Button] = true
+	Elevator_database[Local_data.ID] = t
+	elev_update_tx_ch <- Elevator_database[Local_data.ID]
+}
 
 func AcceptRemoteOrder(order elevio.Order) {
-	elevio.SetButtonLamp(order.Button, order.Floor, true)
+	
+	time.Sleep(10 * time.Millisecond)
+
+	lights_synced := true
+
+	for _, data := range Elevator_database {
+		if !data.Hall_lights[order.Floor][order.Button] {
+			lights_synced = false;
+		}
+	}
+
+	if lights_synced {
+		elevio.SetButtonLamp(order.Button, order.Floor, true)
+	}
 }
+
