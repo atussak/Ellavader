@@ -4,7 +4,7 @@ import "time"
 import "sync"
 import "net"
 import "fmt"
-//import def "../definitions"
+import def "../definitions"
 
 
 
@@ -103,11 +103,10 @@ func PollHallButtons(receiver chan<- Order) {
 			for b := ButtonType(0); b < 2; b++ {
 				v := getButton(b, f)
 				if v != prev[f][b] && v != false {
-					receiver <- Order{f, ButtonType(b)}
 					// For avoiding package loss and guaranteeing that every elevator accepts the order
-					/*for s := 0; s < def.SPAM_LIMIT; s++ {
+					for s := 0; s < def.SPAM_LIMIT; s++ {
 						receiver <- Order{f, ButtonType(b)}
-					}*/
+					}
 				}
 				prev[f][b] = v
 			}
