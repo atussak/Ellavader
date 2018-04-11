@@ -8,57 +8,33 @@ import (
 	"../peers"
 )
 
-type ElevatorUpdate struct {
-	Requests [][] bool,
-	Last_floor int,
-	Direction elevio.MotorDirection,
-	State int,
-	ID string,
-}
+onlineElevators := 0
 
+func OfflineElevator() (bool,int) {
 
-func Init(peer_update_ch chan peers.PeerUpdate, peer_tx_enable chan bool) {
-
-	var id string
-
-	if id == "" {
-		localIP, err := localip.LocalIP()
-		if err != nil {
-			fmt.Println(err)
-			localIP = "DISCONNECTED"
-		}
-		id = fmt.Sprintf("peer-%s-%d", localIP, os.Getpid())
-	}
-
-	go peers.Transmitter(15647, id, peer_tx_enable)
-	go peers.Receiver(15647, peer_update_ch)
 }
 
 
 
 
 
+/*
+-kan vi sende flere meldinger på en channel så lenge vi har buffer?
+-trenger vi å skrive cab orders til disk?
 
-const localPort = 20007
+-pass på at heis som ikke er på nettverket ikke blir assignet ordre
+-assign død heis sine ordre til andre
+-slett hall orders fra den døde heisen
+-skriv cab orders til disk hver gang noe endres (i cab orders)
+-les cab orders fra disk i starten av programmet
+-timeout på om ordre blir tatt
 
+-fikse git repo
 
-func main(){
-	transmit := make(chan string)
-	receive := make(chan string)
-	go bcast.Transmitter(localPort, transmit)
-	go bcast.Receiver(localPort, receive)
-	go func(){
-		for {
-			transmit <- "Hellooo"
-			time.Sleep(time.Second)
-		}
-	}()
+TESTING
+-test på fysiske heiser
+-test med en heis alene
+-test med to heiser alene
+-test med en heis som dør og kommer tilbake
 
-	for{
-		select {
-		case msg := <-receive:
-			fmt.Println(msg)
-
-		}
-	}
-}
+*/
