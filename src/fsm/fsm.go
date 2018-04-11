@@ -6,6 +6,7 @@ import(
 	"fmt"
 	def "../definitions"
 	OM "../orderManager"
+	"../backup"
 )
 
 
@@ -75,6 +76,9 @@ func eventNewOrder(new_order elevio.Order, ch Channels){
 	// add new order to queue
 	OM.Elevator_database[OM.Local_data.ID].Requests[new_order.Floor][new_order.Button] = true
 	OM.UpdateLocalRequests(new_order.Floor, new_order.Button, true, ch.Elev_update_tx_ch)
+	if new_order.Button == elevio.BT_Cab {
+		backup.WriteCabOrdersToFile(OM.Elevator_database[OM.Local_data.ID].Requests)
+	}
 	// turn on lamp for button pressed
 	elevio.SetButtonLamp(new_order.Button, new_order.Floor, true)
 

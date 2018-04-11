@@ -4,6 +4,7 @@ import(
 	"../elevio"
 	def "../definitions"
 	//"fmt"
+	"../backup"
 )
 
 
@@ -110,6 +111,7 @@ func ClearOrder(current_floor int, direction elevio.MotorDirection, elev_update_
 	elevio.SetButtonLamp(elevio.BT_Cab, current_floor, false)
 	Elevator_database[Local_data.ID].Requests[current_floor][elevio.BT_Cab] = false
 	UpdateLocalRequests(current_floor, elevio.BT_Cab, false, elev_update_tx_ch)
+	backup.WriteCabOrdersToFile(Elevator_database[Local_data.ID].Requests)
 
 	execute_up := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallUp}, direction, current_floor)
 	execute_down := ShouldStopForOrder(elevio.Order{current_floor, elevio.BT_HallDown}, direction, current_floor)
