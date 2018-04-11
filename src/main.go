@@ -11,6 +11,7 @@ import (
     "fmt"
     "os"
     "strconv"
+    "./backup"
 )
 
 
@@ -72,6 +73,8 @@ func main(){
     go fsm.DoorTimer(ch.Start_timer_ch, ch.Timeout_ch)
     go fsm.Run(ch)
 
+    // Read old cab orders
+    backup.ReadCabOrdersFromFile(ch.New_order_ch)
     
     // Elevator communication
 
