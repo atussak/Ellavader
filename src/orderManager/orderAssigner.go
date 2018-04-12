@@ -4,6 +4,7 @@ import(
 	"../elevio"
 	def "../definitions"
 	"fmt"
+	"strconv"
 )
 
 
@@ -11,7 +12,10 @@ func findElevatorInDirection(order elevio.Order, current_floor int) (bool, int){
 	ID := def.MAXIMUM_ID
 	elevator_found := false
 
-	for id, data := range Elevator_database {
+	for _, peer := range Peer_update.Peers {
+	//for id, data := range Elevator_database {
+		id, _ := strconv.Atoi(peer)
+		data := Elevator_database[id]
 		fmt.Printf("1b:\tChecking elevator %v", id)
 		if data.Floor == current_floor && isOrderInDirection(order, data){
 			if id < ID {
@@ -29,7 +33,10 @@ func findIdleElevatorInFloor(current_floor int) (bool, int) {
 	ID := def.MAXIMUM_ID
 	elevator_found := false
 
-	for id, data := range Elevator_database {
+	for _, peer := range Peer_update.Peers {
+	//for id, data := range Elevator_database {
+		id, _ := strconv.Atoi(peer)
+		data := Elevator_database[id]
 		fmt.Printf("1a:\tChecking elevator %v", id)
 		if data.Floor == current_floor && data.State == def.IDLE{
 			if id < ID {
@@ -113,7 +120,10 @@ func AssignOrderToElevator(order elevio.Order) int {
 	// Least orders so far starting at the maximum amount of possible orders
 	// Subtracted by 2 because there is only one hall button in top and bottom floor
 	least_orders := def.NUM_FLOORS*def.NUM_BUTTON_TYPES - 2;
-	for id, data := range Elevator_database {
+	for _, peer := range Peer_update.Peers {
+	//for id, data := range Elevator_database {
+		id, _ := strconv.Atoi(peer)
+		data := Elevator_database[id]
 		orders := countOrders(data)
 		if orders <= least_orders && id < ID {
 			least_orders = orders
