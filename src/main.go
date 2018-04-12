@@ -87,7 +87,7 @@ func main(){
     go bcast.Transmitter(bcast_port2, ch.Remote_order_executed_tx_ch)
     go bcast.Receiver(bcast_port2, remote_order_executed_rx_ch)
 
-    // 
+    //
 
     for{
         select{
