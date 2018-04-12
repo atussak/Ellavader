@@ -133,3 +133,14 @@ func AssignOrderToElevator(order elevio.Order) int {
 	fmt.Printf("2:\tFound elevator %v with %v orders.\n", ID, least_orders)
 	return ID
 }
+
+func HandleDeadElevator(id int, new_remote_order_tx_ch chan elevio.Order) {
+	for floor := def.BOTTOM_FLOOR; floor <= def.TOP_FLOOR; floor++ {
+		for button := elevio.BT_HallUp; button <= elevio.BT_Cab; button++ {
+			if Elevator_database[id].Requests[floor][button] {
+				new_remote_order_tx_ch <- elevio.Order{floor, elevio.ButtonType(button)}
+				Elevator_database[id].Requests[floor][button] = false
+			}
+		}
+	}
+}
