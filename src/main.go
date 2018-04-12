@@ -104,6 +104,16 @@ func main(){
             }
         case executed_order := <- remote_order_executed_rx_ch:
             elevio.SetButtonLamp(executed_order.Button, executed_order.Floor, false)
+        case OM.Peer_update = <- peer_update_ch:
+            fmt.Printf("Peers:\n")
+            for _, peer := range OM.Peer_update.Peers {
+                fmt.Printf(peer)
+                fmt.Printf("\n")
+            }
+            for _, lost_peer := range OM.Peer_update.Lost {
+                id, _ := strconv.Atoi(lost_peer)
+                OM.HandleDeadElevator(id, new_remote_order_tx_ch)
+            }
         }
     }
 }

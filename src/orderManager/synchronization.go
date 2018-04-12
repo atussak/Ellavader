@@ -5,6 +5,7 @@ import(
 	def "../definitions"
 	"fmt"
 	"time"
+	"../peers"
 )
 
 
@@ -22,6 +23,8 @@ type ElevatorData struct {
 var Elevator_database map[int]ElevatorData
 
 var Local_data ElevatorData
+
+var Peer_update peers.PeerUpdate
 
 
 func PrintRequests(requests [][] bool) {
